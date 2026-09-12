@@ -37,7 +37,14 @@ body{
 h1,h2,h3{ font-family:'Sora',sans-serif; margin:0; }
 .app{ max-width:600px; margin:0 auto; }
 .top{ display:flex; flex-direction:column; gap:4px; margin-bottom:20px; }
+.top-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .top h1{ font-size:22px; color:var(--accent-dark); }
+.home-btn{
+  flex-shrink:0; background:var(--surface); border:1.5px solid var(--line); color:var(--accent-dark);
+  font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 12px;
+  border-radius:10px; cursor:pointer; transition:border-color .15s ease, background .15s ease;
+}
+.home-btn:hover{ border-color:var(--accent); background:var(--accent-soft); }
 .crumb{ font-size:13px; color:var(--muted); display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 .crumb b{ color:var(--ink); font-weight:600; }
 .crumb .sep{ opacity:.5; }
@@ -174,7 +181,10 @@ audio{ width:100%; margin-top:6px; }
 
 <div class="app">
   <div class="top">
-    <h1>Luyện nói tiếng Anh</h1>
+    <div class="top-row">
+      <h1>Luyện nói tiếng Anh</h1>
+      <button class="home-btn" id="homeBtn" title="Về trang chủ">🏠 Trang chủ</button>
+    </div>
     <div class="crumb" id="crumb"><span>Chọn khối lớp để bắt đầu</span></div>
   </div>
 
@@ -361,6 +371,19 @@ function updateCrumb(){
 function levelLabel(l){ return {basic:'Nhận biết',intermediate:'Thông hiểu',advanced:'Nâng cao'}[l]; }
 function currentTopic(){ return data[state.grade][state.level][state.topicIndex]; }
 
+document.getElementById('homeBtn').addEventListener('click', ()=>{
+  stopEverythingSafely();
+  state.grade = null;
+  state.level = null;
+  state.topicIndex = null;
+  state.qIndex = 0;
+  state.recordings = {};
+  Object.keys(manualScores).forEach(k=>delete manualScores[k]);
+  hideMicNotice();
+  updateCrumb();
+  showView('grade');
+});
+
 document.querySelectorAll('[data-back]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const target = btn.getAttribute('data-back');
@@ -457,6 +480,10 @@ document.getElementById('nextQ').addEventListener('click', ()=>{
   const topic = currentTopic();
   if(state.qIndex < topic.q.length-1){ state.qIndex++; renderPractice(); }
 });
+document.getElementById('playback').addEventListener('error', ()=>{
+  showMicNotice('Trình duyệt này không phát lại được định dạng âm thanh vừa ghi. Bản ghi vẫn được dùng để tự chấm điểm bằng giọng nói, nhưng bạn có thể không nghe lại được — hãy thử trên Chrome nếu cần nghe lại.');
+});
+
 document.getElementById('goScore').addEventListener('click', ()=>{
   stopEverythingSafely();
   renderScoring();
@@ -538,6 +565,21 @@ function stopTimer(){
 
 const micBtn = document.getElementById('micBtn');
 
+function pickSupportedMimeType(){
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/mp4;codecs=mp4a.40.2',
+    'audio/ogg;codecs=opus'
+  ];
+  if(!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  for(const type of candidates){
+    if(MediaRecorder.isTypeSupported(type)) return type;
+  }
+  return '';
+}
+
 async function beginRecording(){
   if(state.pointerActive) return;
   let stream;
@@ -553,11 +595,17 @@ async function beginRecording(){
   animateWave();
 
   try{
-    state.recorder = new MediaRecorder(stream);
-    state.recorder.ondataavailable = e=>{ if(e.data.size>0) state.chunks.push(e.data); };
+    const mimeType = pickSupportedMimeType();
+    state.recorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+    state.recordingMimeType = state.recorder.mimeType || mimeType || '';
+    state.recorder.ondataavailable = e=>{ if(e.data && e.data.size>0) state.chunks.push(e.data); };
     state.recorder.start();
   }catch(e){
-    showMicNotice('Không thể bắt đầu ghi âm: ' + e.message);
+    state.pointerActive = false;
+    micBtn.classList.remove('recording');
+    stopTimer();
+    showMicNotice('Không thể bắt đầu ghi âm: ' + e.message + '. Hãy thử tải lại trang hoặc dùng Chrome.');
+    return;
   }
 
   if(SR){
@@ -604,15 +652,22 @@ function endRecording(){
 
   if(state.recorder && state.recorder.state==='recording'){
     state.recorder.onstop = ()=>{
-      const blob = new Blob(state.chunks, {type:'audio/webm'});
-      const url = URL.createObjectURL(blob);
+      const blobType = state.recordingMimeType || 'audio/webm';
+      const blob = new Blob(state.chunks, {type: blobType});
       let transcript = '', confSum=0, confCount=0;
       if(state.recognition){
         transcript = state.recognition._finalText || '';
         confSum = state.recognition._confSum || 0;
         confCount = state.recognition._confCount || 0;
       }
-      state.recordings[qIdx] = { blob, url, transcript, duration, confSum, confCount };
+      if(blob.size===0 || duration<400){
+        delete state.recordings[qIdx];
+        showMicNotice('Không ghi được âm thanh (có thể bạn giữ nút quá nhanh, hoặc micro bị chặn bởi ứng dụng khác). Hãy giữ nút lâu hơn một chút rồi thử lại.');
+      } else {
+        hideMicNotice();
+        const url = URL.createObjectURL(blob);
+        state.recordings[qIdx] = { blob, url, transcript, duration, confSum, confCount };
+      }
       if(qIdx===state.qIndex) renderPractice();
     };
     state.recorder.stop();
