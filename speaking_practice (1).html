@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Luyện nói tiếng Anh · Khối 10–12</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF3F1;
+  --surface:#FFFFFF;
+  --ink:#17262B;
+  --muted:#5B6E70;
+  --line:#DCE6E3;
+  --accent:#1B6B6B;
+  --accent-dark:#124F4F;
+  --accent-soft:#E4F0EE;
+  --record:#DD5B34;
+  --record-dark:#B5451F;
+  --record-soft:#FBE7DE;
+  --good:#2F8F4E;
+  --warn:#C08A1E;
+  --bad:#C24B3F;
+  --radius:18px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  padding:28px 16px 60px;
+}
+h1,h2,h3{ font-family:'Sora',sans-serif; margin:0; }
+.app{ max-width:600px; margin:0 auto; }
+.top{ display:flex; flex-direction:column; gap:4px; margin-bottom:20px; }
+.top h1{ font-size:22px; color:var(--accent-dark); }
+.crumb{ font-size:13px; color:var(--muted); display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.crumb b{ color:var(--ink); font-weight:600; }
+.crumb .sep{ opacity:.5; }
+
+.notice{
+  background:#FFF6E9; border:1px solid #F0D9A8; color:#7A5A16;
+  font-size:13px; padding:10px 14px; border-radius:12px; margin-bottom:16px;
+  display:none;
+}
+.notice.show{ display:block; }
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px;
+  margin-bottom:16px;
+}
+.view{ display:none; }
+.view.active{ display:block; }
+
+.grid-btns{ display:grid; gap:10px; margin-top:16px; }
+.opt-btn{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  width:100%; text-align:left; padding:16px 18px; border-radius:14px;
+  border:1.5px solid var(--line); background:var(--surface); color:var(--ink);
+  font-family:'Inter',sans-serif; font-size:15.5px; font-weight:600; cursor:pointer;
+  transition:border-color .15s ease, background .15s ease, transform .1s ease;
+}
+.opt-btn:hover{ border-color:var(--accent); background:var(--accent-soft); }
+.opt-btn:active{ transform:scale(.98); }
+.opt-btn .hint{ font-size:12.5px; font-weight:400; color:var(--muted); }
+.opt-btn .arrow{ color:var(--accent); font-size:18px; }
+
+.subtitle{ color:var(--muted); font-size:14px; margin-top:6px; }
+
+.linkback{
+  background:none; border:none; color:var(--muted); font-family:'Inter',sans-serif;
+  font-size:13.5px; cursor:pointer; padding:6px 0; margin-bottom:6px; display:inline-flex; gap:6px; align-items:center;
+}
+.linkback:hover{ color:var(--accent-dark); }
+
+/* Practice view */
+.q-progress{ display:flex; gap:6px; margin-bottom:18px; }
+.q-dot{ flex:1; height:5px; border-radius:3px; background:var(--line); }
+.q-dot.done{ background:var(--good); }
+.q-dot.current{ background:var(--accent); }
+
+.q-text{ font-size:19px; font-weight:600; line-height:1.4; margin-bottom:4px; }
+.q-index{ color:var(--muted); font-size:13px; margin-bottom:10px; }
+
+.rec-zone{ display:flex; flex-direction:column; align-items:center; gap:14px; padding:22px 0 6px; }
+
+.wave{ display:flex; align-items:flex-end; gap:4px; height:34px; }
+.wave span{ width:5px; border-radius:3px; background:var(--record); opacity:.35; height:6px; transition:height .07s linear; }
+
+.mic-btn{
+  width:104px; height:104px; border-radius:50%; border:none; cursor:pointer;
+  background:var(--record); color:#fff; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  font-size:36px; user-select:none; -webkit-user-select:none; touch-action:none;
+  transition:transform .12s ease, background .15s ease;
+  box-shadow:0 6px 18px rgba(221,91,52,.35);
+}
+.mic-btn::after{
+  content:''; position:absolute; inset:-10px; border-radius:50%;
+  border:2.5px solid var(--record); opacity:0; transform:scale(1);
+}
+.mic-btn.recording{ background:var(--record-dark); transform:scale(1.05); }
+.mic-btn.recording::after{ animation:pulse-ring 1.15s ease-out infinite; }
+.mic-btn:active{ transform:scale(.96); }
+@keyframes pulse-ring{
+  0%{ opacity:.55; transform:scale(1); }
+  100%{ opacity:0; transform:scale(1.35); }
+}
+
+.rec-hint{ font-size:13.5px; color:var(--muted); text-align:center; }
+.rec-timer{ font-family:'Sora',sans-serif; font-size:15px; color:var(--record-dark); min-height:20px; }
+
+.transcript-box{
+  background:var(--accent-soft); border-radius:12px; padding:10px 14px;
+  font-size:13.5px; color:var(--accent-dark); min-height:20px; width:100%;
+  text-align:center; font-style:italic;
+}
+
+audio{ width:100%; margin-top:6px; }
+
+.nav-row{ display:flex; gap:10px; margin-top:20px; }
+.btn{
+  flex:1; padding:13px 16px; border-radius:12px; border:none; cursor:pointer;
+  font-family:'Inter',sans-serif; font-weight:600; font-size:14.5px;
+  transition:opacity .15s ease, transform .1s ease;
+}
+.btn:active{ transform:scale(.98); }
+.btn-primary{ background:var(--accent); color:#fff; }
+.btn-primary:hover{ background:var(--accent-dark); }
+.btn-ghost{ background:var(--surface); color:var(--ink); border:1.5px solid var(--line); }
+.btn-ghost:hover{ border-color:var(--accent); }
+.btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+.btn-grade{ width:100%; margin-top:18px; background:var(--accent); color:#fff; padding:14px; border-radius:12px; border:none; font-weight:700; font-size:15px; cursor:pointer; font-family:'Inter',sans-serif; }
+.btn-grade:hover{ background:var(--accent-dark); }
+
+/* Scoring view */
+.score-item{ border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px; }
+.score-q{ font-weight:600; font-size:15px; margin-bottom:4px; }
+.score-transcript{ font-size:13px; color:var(--muted); font-style:italic; margin-bottom:10px; }
+.score-empty{ font-size:13px; color:var(--bad); margin-bottom:10px; }
+.crit-row{ display:flex; align-items:center; justify-content:space-between; margin:8px 0; gap:10px; }
+.crit-label{ font-size:13px; color:var(--muted); width:76px; flex-shrink:0; }
+.crit-scale{ display:flex; gap:5px; flex:1; }
+.crit-scale button{
+  flex:1; aspect-ratio:1; border-radius:8px; border:1.5px solid var(--line);
+  background:var(--surface); color:var(--muted); font-family:'Sora',sans-serif; font-weight:700;
+  cursor:pointer; font-size:13px;
+}
+.crit-scale button.picked{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.crit-scale button.suggested:not(.picked){ border-color:var(--accent); color:var(--accent-dark); }
+.q-subtotal{ text-align:right; font-size:13px; color:var(--muted); margin-top:6px; }
+
+.auto-tag{
+  display:inline-block; font-size:11.5px; background:var(--accent-soft); color:var(--accent-dark);
+  padding:3px 8px; border-radius:20px; margin-bottom:10px; font-weight:600;
+}
+
+.total-card{ text-align:center; padding:26px 20px; }
+.total-num{ font-family:'Sora',sans-serif; font-size:40px; font-weight:800; color:var(--accent-dark); }
+.total-band{ font-size:15px; margin-top:6px; color:var(--muted); }
+
+.disclaimer{ font-size:12px; color:var(--muted); margin-top:14px; line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="top">
+    <h1>Luyện nói tiếng Anh</h1>
+    <div class="crumb" id="crumb"><span>Chọn khối lớp để bắt đầu</span></div>
+  </div>
+
+  <div id="micNotice" class="notice"></div>
+
+  <!-- GRADE -->
+  <div class="view active" id="view-grade">
+    <div class="card">
+      <h2>Bạn đang học khối nào?</h2>
+      <p class="subtitle">Chọn khối lớp để xem các chủ đề phù hợp.</p>
+      <div class="grid-btns">
+        <button class="opt-btn" data-grade="10">Khối 10 <span class="arrow">→</span></button>
+        <button class="opt-btn" data-grade="11">Khối 11 <span class="arrow">→</span></button>
+        <button class="opt-btn" data-grade="12">Khối 12 <span class="arrow">→</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEVEL -->
+  <div class="view" id="view-level">
+    <div class="card">
+      <button class="linkback" data-back="grade">← Đổi khối lớp</button>
+      <h2>Chọn mức độ</h2>
+      <p class="subtitle">Chọn độ khó phù hợp với bạn.</p>
+      <div class="grid-btns">
+        <button class="opt-btn" data-level="basic">Nhận biết <span class="hint">Cơ bản</span></button>
+        <button class="opt-btn" data-level="intermediate">Thông hiểu <span class="hint">Trung bình</span></button>
+        <button class="opt-btn" data-level="advanced">Nâng cao <span class="hint">Thử thách</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC -->
+  <div class="view" id="view-topic">
+    <div class="card">
+      <button class="linkback" data-back="level">← Đổi mức độ</button>
+      <h2>Chọn chủ đề</h2>
+      <p class="subtitle">Mỗi chủ đề có vài câu hỏi để bạn luyện nói.</p>
+      <div class="grid-btns" id="topicList"></div>
+    </div>
+  </div>
+
+  <!-- PRACTICE -->
+  <div class="view" id="view-practice">
+    <div class="card">
+      <button class="linkback" data-back="topic">← Chọn chủ đề khác</button>
+      <div class="q-progress" id="qProgress"></div>
+      <div class="q-index" id="qIndex"></div>
+      <div class="q-text" id="qText"></div>
+
+      <div class="rec-zone">
+        <div class="wave" id="wave"></div>
+        <button class="mic-btn" id="micBtn">🎤</button>
+        <div class="rec-timer" id="recTimer"></div>
+        <div class="rec-hint" id="recHint">Giữ nút để nói, thả ra để dừng</div>
+        <div class="transcript-box" id="liveTranscript" style="display:none;"></div>
+        <audio id="playback" controls style="display:none;"></audio>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-ghost" id="prevQ">← Câu trước</button>
+        <button class="btn btn-primary" id="nextQ">Câu tiếp →</button>
+      </div>
+      <button class="btn-grade" id="goScore">Chấm điểm</button>
+    </div>
+  </div>
+
+  <!-- SCORING -->
+  <div class="view" id="view-score">
+    <div class="card">
+      <button class="linkback" data-back="practice">← Quay lại luyện tập</button>
+      <h2>Kết quả chấm điểm</h2>
+      <p class="subtitle">Điểm gợi ý được tính tự động từ bản ghi âm. Bạn có thể chạm để đổi lại từng mức điểm.</p>
+      <div id="scoreList" style="margin-top:16px;"></div>
+    </div>
+    <div class="card total-card">
+      <div class="total-num" id="totalScore">0</div>
+      <div class="total-band" id="totalBand">Hãy hoàn thành phần chấm điểm ở trên</div>
+      <button class="btn btn-ghost" id="backTopicsFromScore" style="margin-top:16px; width:100%;">Luyện chủ đề khác</button>
+      <p class="disclaimer">Điểm tự động (F: Trôi chảy, V: Từ vựng, G: Ngữ pháp, P: Phát âm) là ước lượng dựa trên giọng nói được nhận dạng bởi trình duyệt (hoạt động tốt nhất trên Chrome, cần internet). Đây không phải là đánh giá phát âm chính xác tuyệt đối — hãy dùng làm tham khảo và điều chỉnh nếu cần.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const data = {
+"10":{
+"basic":[
+{t:"Introduce Yourself",q:["What is your name?","How old are you?","Where are you from?","What are your hobbies?"]},
+{t:"My Family",q:["How many people are there in your family?","Who are they?","What does your father/mother do?"]},
+{t:"My School",q:["What is the name of your school?","Where is it?","How many students/classes are there?","Do you like your school? Why?"]},
+{t:"My Favorite Food",q:["What is your favorite food?","When do you usually eat it?","Is it popular in Vietnam?"]},
+{t:"My Daily Routine",q:["What time do you get up?","What do you do in the morning/afternoon/evening?","What do you do in your free time?"]}
+],
+"intermediate":[
+{t:"Your Favorite Subject",q:["What is your favorite subject?","Why do you like it?","Is it useful for your future? Why?"]},
+{t:"A Person You Admire",q:["Who is the person?","What does he/she do?","Why do you admire him/her?"]},
+{t:"Your Favorite Place",q:["What is the place?","Why do you like this place?","How do you feel when you are there?"]},
+{t:"The Importance of Friends",q:["Who are your friends?","Why are friends important to you?","What do you usually do together?"]},
+{t:"Healthy Lifestyle",q:["What is a healthy lifestyle?","What should students do to stay healthy?","Why is it important?"]}
+],
+"advanced":[
+{t:"The Role of School in Students' Lives",q:["What role does school play in your life?","Besides knowledge, what skills do students learn at school?","Do you think school prepares students well for the future? Why/Why not?"]},
+{t:"Technology in Teenagers' Daily Life",q:["How often do teenagers use technology?","What are the advantages of using smartphones for study?","Do you think teenagers use technology too much? Explain."]},
+{t:"A Person Who Has Influenced You",q:["Who is the person?","How has he/she influenced you?","What can young people learn from this person?"]},
+{t:"Free Time Activities and Personal Development",q:["What do you often do in your free time?","How can free-time activities help students develop skills?","Should students spend more time on hobbies or study? Why?"]},
+{t:"The Importance of a Healthy Lifestyle for Students",q:["What does a healthy lifestyle include?","Why is it important for students?","What problems may students face if they don't live healthily?"]}
+]
+},
+"11":{
+"basic":[
+{t:"Your Favorite Teacher",q:["Who is your favorite teacher?","What subject does he/she teach?","How long have you studied with him/her?"]},
+{t:"A School Activity You Like",q:["What is the activity?","When does it take place?","Who joins this activity?"]},
+{t:"Your Hometown",q:["Where is your hometown?","Is it big or small?","What is it famous for?"]},
+{t:"A Book You Like",q:["What is the book?","Who is the writer?","When did you read it?"]},
+{t:"Your Favorite Sport",q:["What sport do you like?","How often do you play/watch it?","Who do you usually play/watch it with?"]}
+],
+"intermediate":[
+{t:"The Importance of Part-time Jobs",q:["Do many students have part-time jobs?","What can students learn from part-time jobs?","Why can part-time jobs be useful for students?"]},
+{t:"Learning English in High School",q:["How do students learn English at school?","Why is English important for students?","Which skills are the most important?"]},
+{t:"Effects of Social Media",q:["How do teenagers use social media?","What are the good effects?","Are there any negative effects?"]},
+{t:"Environmental Protection",q:["What environmental problems do you know?","Why should students protect the environment?","What can students do at school or at home?"]},
+{t:"Choosing a Future Job",q:["What job would you like to do?","Why are students worried?","What factors are important?"]}
+],
+"advanced":[
+{t:"Technology and Learning",q:["How has technology changed learning?","What are its benefits?","Can it replace teachers?"]},
+{t:"Pressure on Students",q:["What pressure do students face?","What causes it?","How can stress be reduced?"]},
+{t:"Social Media: Harmful or Helpful?",q:["How does it influence teens?","What are positive effects?","Is it more harmful or helpful?"]},
+{t:"Soft Skills",q:["What are soft skills?","Why are they important?","Which skill is most necessary?"]},
+{t:"Family Influence",q:["How does family influence decisions?","How can parents support children?","Should parents control teens strictly?"]}
+]
+},
+"12":{
+"basic":[
+{t:"Your Future Plans",q:["What are your plans after high school?","University or work?","What major/job are you interested in?"]},
+{t:"A Subject This Year",q:["What subject is it?","How many lessons a week?","Compulsory or optional?"]},
+{t:"A Place You Want to Visit",q:["What is the place?","Where is it?","Who will you go with?"]},
+{t:"Your Way to Relax",q:["What do you do to relax?","When do you do it?","Alone or with others?"]},
+{t:"A Person Who Supports You",q:["Who is the person?","What does he/she do for you?","How often do you talk?"]}
+],
+"intermediate":[
+{t:"Setting Goals",q:["Why set goals?","What goals do students have?","How do goals help study?"]},
+{t:"Learning from Failure",q:["What can students learn from failure?","Why is failure important?","How should students deal with it?"]},
+{t:"Teamwork",q:["Why is teamwork important?","When do students work in teams?","What skills are developed?"]},
+{t:"Impact of Exams",q:["How do exams affect students?","Why do exams cause stress?","Do exams help learning?"]},
+{t:"Life Skills",q:["What are life skills?","Why are they important?","Which life skill is most important?"]}
+],
+"advanced":[
+{t:"Technology & Communication",q:["How has technology changed communication?","Pros and cons of online communication?","Is face-to-face less important?"]},
+{t:"Education Pressure or Preparation",q:["Why do students feel pressure?","Does pressure help success?","How to reduce pressure?"]},
+{t:"Success in Life",q:["How do people define success?","Can money buy happiness?","What makes a successful life?"]},
+{t:"Environmental Responsibility",q:["Serious environmental problems?","Individual responsibility?","Do actions make a difference?"]},
+{t:"University vs Experience",q:["Benefits of university?","Benefits of experience?","Which is more important?"]}
+]
+}
+};
+
+/* ================= STATE ================= */
+const state = {
+  grade:null, level:null, topicIndex:null, qIndex:0,
+  stream:null, audioCtx:null, analyser:null, recorder:null,
+  chunks:[], recognition:null, recognizing:false,
+  recordings:{}, // qIndex -> {blob, url, transcript, duration, confSum, confCount}
+  pointerActive:false, startTime:0
+};
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+/* ================= NAV HELPERS ================= */
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+}
+function updateCrumb(){
+  const parts=[];
+  if(state.grade) parts.push(`Khối <b>${state.grade}</b>`);
+  if(state.level) parts.push(levelLabel(state.level));
+  if(state.topicIndex!==null) parts.push(`<b>${currentTopic().t}</b>`);
+  document.getElementById('crumb').innerHTML = parts.length
+    ? parts.map((p,i)=> i===0? p : `<span class="sep">›</span>${p}`).join('')
+    : 'Chọn khối lớp để bắt đầu';
+}
+function levelLabel(l){ return {basic:'Nhận biết',intermediate:'Thông hiểu',advanced:'Nâng cao'}[l]; }
+function currentTopic(){ return data[state.grade][state.level][state.topicIndex]; }
+
+document.querySelectorAll('[data-back]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const target = btn.getAttribute('data-back');
+    if(target==='grade'){ state.level=null; state.topicIndex=null; showView('grade'); }
+    if(target==='level'){ state.topicIndex=null; showView('level'); }
+    if(target==='topic'){ stopEverythingSafely(); showView('topic'); }
+    if(target==='practice'){ showView('practice'); }
+    updateCrumb();
+  });
+});
+
+document.querySelectorAll('[data-grade]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.grade = btn.getAttribute('data-grade');
+    updateCrumb();
+    showView('level');
+  });
+});
+
+document.querySelectorAll('[data-level]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.level = btn.getAttribute('data-level');
+    updateCrumb();
+    renderTopics();
+    showView('topic');
+  });
+});
+
+function renderTopics(){
+  const box = document.getElementById('topicList');
+  box.innerHTML = '';
+  data[state.grade][state.level].forEach((topic,i)=>{
+    const b = document.createElement('button');
+    b.className='opt-btn';
+    b.innerHTML = `${topic.t} <span class="hint">${topic.q.length} câu</span>`;
+    b.addEventListener('click', ()=>{
+      state.topicIndex = i;
+      state.qIndex = 0;
+      state.recordings = {};
+      updateCrumb();
+      renderPractice();
+      showView('practice');
+    });
+    box.appendChild(b);
+  });
+}
+
+document.getElementById('backTopicsFromScore').addEventListener('click', ()=>{
+  stopEverythingSafely();
+  showView('topic');
+});
+
+/* ================= PRACTICE VIEW ================= */
+function renderPractice(){
+  const topic = currentTopic();
+  document.getElementById('qIndex').textContent = `Câu hỏi ${state.qIndex+1} / ${topic.q.length} · ${topic.t}`;
+  document.getElementById('qText').textContent = topic.q[state.qIndex];
+
+  const prog = document.getElementById('qProgress');
+  prog.innerHTML = '';
+  topic.q.forEach((_,i)=>{
+    const d = document.createElement('div');
+    d.className = 'q-dot' + (state.recordings[i] ? ' done' : (i===state.qIndex ? ' current':''));
+    prog.appendChild(d);
+  });
+
+  document.getElementById('prevQ').disabled = state.qIndex===0;
+  document.getElementById('nextQ').textContent = state.qIndex===topic.q.length-1 ? 'Xong →' : 'Câu tiếp →';
+
+  const rec = state.recordings[state.qIndex];
+  const playback = document.getElementById('playback');
+  if(rec){
+    playback.src = rec.url;
+    playback.style.display='block';
+  } else {
+    playback.removeAttribute('src');
+    playback.style.display='none';
+  }
+  const liveBox = document.getElementById('liveTranscript');
+  if(rec && rec.transcript){
+    liveBox.textContent = '"'+rec.transcript+'"';
+    liveBox.style.display='block';
+  } else {
+    liveBox.style.display='none';
+  }
+  document.getElementById('recTimer').textContent = '';
+  document.getElementById('recHint').textContent = 'Giữ nút để nói, thả ra để dừng';
+}
+
+document.getElementById('prevQ').addEventListener('click', ()=>{
+  if(state.qIndex>0){ state.qIndex--; renderPractice(); }
+});
+document.getElementById('nextQ').addEventListener('click', ()=>{
+  const topic = currentTopic();
+  if(state.qIndex < topic.q.length-1){ state.qIndex++; renderPractice(); }
+});
+document.getElementById('goScore').addEventListener('click', ()=>{
+  stopEverythingSafely();
+  renderScoring();
+  showView('score');
+});
+
+/* ================= MIC / RECORDING ================= */
+const waveBox = document.getElementById('wave');
+for(let i=0;i<7;i++){ const s=document.createElement('span'); waveBox.appendChild(s); }
+const waveBars = waveBox.querySelectorAll('span');
+
+function showMicNotice(msg){
+  const n = document.getElementById('micNotice');
+  n.textContent = msg;
+  n.classList.add('show');
+}
+function hideMicNotice(){
+  document.getElementById('micNotice').classList.remove('show');
+}
+
+if(!window.isSecureContext){
+  showMicNotice('Trang này cần mở qua HTTPS hoặc chạy trên localhost để ghi âm hoạt động. Nếu bạn mở trực tiếp bằng file, hãy tải trang lên một máy chủ web (hoặc mở bằng Chrome trên localhost) trước khi luyện ghi âm.');
+}
+
+async function ensureStream(){
+  if(state.stream) return state.stream;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showMicNotice('Trình duyệt này không hỗ trợ ghi âm. Hãy dùng Chrome hoặc Edge bản mới nhất.');
+    throw new Error('no getUserMedia');
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    state.stream = stream;
+    hideMicNotice();
+    setupAnalyser(stream);
+    return stream;
+  }catch(err){
+    showMicNotice('Không thể truy cập micro (' + err.message + '). Hãy kiểm tra quyền micro của trình duyệt cho trang này rồi thử lại.');
+    throw err;
+  }
+}
+
+function setupAnalyser(stream){
+  try{
+    state.audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    state.analyser = state.audioCtx.createAnalyser();
+    state.analyser.fftSize = 64;
+    const src = state.audioCtx.createMediaStreamSource(stream);
+    src.connect(state.analyser);
+  }catch(e){ /* waveform is cosmetic only, ignore failures */ }
+}
+
+function animateWave(){
+  if(!state.pointerActive || !state.analyser){
+    waveBars.forEach(b=>b.style.height='6px');
+    return;
+  }
+  const data = new Uint8Array(state.analyser.frequencyBinCount);
+  state.analyser.getByteFrequencyData(data);
+  waveBars.forEach((b,i)=>{
+    const v = data[i*3] || 0;
+    b.style.height = Math.max(6, (v/255)*34) + 'px';
+  });
+  requestAnimationFrame(animateWave);
+}
+
+let timerInterval=null;
+function startTimer(){
+  const timerEl = document.getElementById('recTimer');
+  state.startTime = Date.now();
+  timerInterval = setInterval(()=>{
+    const s = ((Date.now()-state.startTime)/1000).toFixed(1);
+    timerEl.textContent = s + 's';
+  }, 100);
+}
+function stopTimer(){
+  clearInterval(timerInterval);
+}
+
+const micBtn = document.getElementById('micBtn');
+
+async function beginRecording(){
+  if(state.pointerActive) return;
+  let stream;
+  try{ stream = await ensureStream(); } catch(e){ return; }
+
+  state.pointerActive = true;
+  state.chunks = [];
+  micBtn.classList.add('recording');
+  document.getElementById('recHint').textContent = 'Đang nghe... thả nút để dừng';
+  document.getElementById('liveTranscript').style.display='block';
+  document.getElementById('liveTranscript').textContent = '';
+  startTimer();
+  animateWave();
+
+  try{
+    state.recorder = new MediaRecorder(stream);
+    state.recorder.ondataavailable = e=>{ if(e.data.size>0) state.chunks.push(e.data); };
+    state.recorder.start();
+  }catch(e){
+    showMicNotice('Không thể bắt đầu ghi âm: ' + e.message);
+  }
+
+  if(SR){
+    state.recognition = new SR();
+    state.recognition.lang = 'en-US';
+    state.recognition.continuous = true;
+    state.recognition.interimResults = true;
+    let finalText = '';
+    let confSum=0, confCount=0;
+    state.recognition.onresult = (event)=>{
+      let interim='';
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        const res = event.results[i];
+        if(res.isFinal){
+          finalText += res[0].transcript + ' ';
+          if(typeof res[0].confidence==='number' && res[0].confidence>0){
+            confSum += res[0].confidence; confCount++;
+          }
+        } else {
+          interim += res[0].transcript;
+        }
+      }
+      document.getElementById('liveTranscript').textContent = (finalText+interim).trim();
+      state.recognition._finalText = finalText.trim();
+      state.recognition._confSum = confSum;
+      state.recognition._confCount = confCount;
+    };
+    state.recognition.onerror = ()=>{ /* stay silent, transcript is a bonus feature */ };
+    try{ state.recognition.start(); state.recognizing=true; }catch(e){ state.recognizing=false; }
+  } else {
+    document.getElementById('liveTranscript').textContent = '(Trình duyệt không hỗ trợ nhận diện giọng nói tự động — vẫn ghi âm bình thường)';
+  }
+}
+
+function endRecording(){
+  if(!state.pointerActive) return;
+  state.pointerActive = false;
+  micBtn.classList.remove('recording');
+  stopTimer();
+  document.getElementById('recHint').textContent = 'Giữ nút để nói, thả ra để dừng';
+
+  const duration = Date.now()-state.startTime;
+  const qIdx = state.qIndex;
+
+  if(state.recorder && state.recorder.state==='recording'){
+    state.recorder.onstop = ()=>{
+      const blob = new Blob(state.chunks, {type:'audio/webm'});
+      const url = URL.createObjectURL(blob);
+      let transcript = '', confSum=0, confCount=0;
+      if(state.recognition){
+        transcript = state.recognition._finalText || '';
+        confSum = state.recognition._confSum || 0;
+        confCount = state.recognition._confCount || 0;
+      }
+      state.recordings[qIdx] = { blob, url, transcript, duration, confSum, confCount };
+      if(qIdx===state.qIndex) renderPractice();
+    };
+    state.recorder.stop();
+  }
+  if(state.recognition && state.recognizing){
+    try{ state.recognition.stop(); }catch(e){}
+    state.recognizing=false;
+  }
+}
+
+micBtn.addEventListener('pointerdown', (e)=>{ e.preventDefault(); beginRecording(); });
+micBtn.addEventListener('pointerup', endRecording);
+micBtn.addEventListener('pointerleave', endRecording);
+micBtn.addEventListener('pointercancel', endRecording);
+window.addEventListener('blur', endRecording);
+
+function stopEverythingSafely(){
+  if(state.pointerActive) endRecording();
+}
+
+/* ================= AUTO SCORING ================= */
+const FILLERS = ['um','uh','erm','uhh','umm','well','like'];
+
+function computeAutoScores(rec, questionText){
+  if(!rec || !rec.transcript || !rec.transcript.trim()){
+    return null;
+  }
+  const raw = rec.transcript.trim();
+  const words = raw.split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
+  const lower = words.map(w=>w.toLowerCase().replace(/[^a-z']/g,''));
+  const uniqueCount = new Set(lower.filter(Boolean)).size;
+  const minutes = Math.max(rec.duration/60000, 0.05);
+  const wpm = wordCount/minutes;
+  const fillerCount = lower.filter(w=>FILLERS.includes(w)).length;
+  const fillerRatio = wordCount ? fillerCount/wordCount : 0;
+
+  // Fluency
+  let f;
+  if(wordCount===0) f=1;
+  else if(wpm>=70 && wpm<=170 && fillerRatio<0.08) f=5;
+  else if(wpm>=50 && wpm<=200 && fillerRatio<0.15) f=4;
+  else if(wpm>=30) f=3;
+  else f=2;
+
+  // Vocabulary
+  let v;
+  if(uniqueCount>=16) v=5;
+  else if(uniqueCount>=11) v=4;
+  else if(uniqueCount>=7) v=3;
+  else if(uniqueCount>=3) v=2;
+  else v=1;
+  const qWords = questionText.toLowerCase().replace(/[?.,]/g,'').split(/\s+/).filter(w=>w.length>4);
+  const overlap = qWords.filter(k=>raw.toLowerCase().includes(k)).length;
+  if(overlap>=1 && v<5) v++;
+
+  // Grammar (rough heuristic — least reliable signal)
+  let g;
+  if(wordCount===0) g=1;
+  else if(wordCount<3) g=2;
+  else{
+    const hasFunctionWord = /\b(i|you|it|is|are|was|were|do|does|did|have|has|my|our|because|and|but|when)\b/i.test(raw);
+    g = hasFunctionWord ? 4 : 3;
+    const repeatRatio = 1 - uniqueCount/Math.max(wordCount,1);
+    if(repeatRatio>0.55) g = Math.max(1,g-1);
+  }
+
+  // Pronunciation — proxy via recognizer confidence when available
+  let p;
+  if(rec.confCount>0){
+    const avgConf = rec.confSum/rec.confCount;
+    if(avgConf>=0.85) p=5;
+    else if(avgConf>=0.7) p=4;
+    else if(avgConf>=0.5) p=3;
+    else if(avgConf>=0.3) p=2;
+    else p=1;
+  } else {
+    p = wordCount>0 ? 3 : 1;
+  }
+
+  return {f,v,g,p};
+}
+
+/* ================= SCORING VIEW ================= */
+const manualScores = {}; // qIndex -> {f,v,g,p}
+
+function renderScoring(){
+  const topic = currentTopic();
+  const list = document.getElementById('scoreList');
+  list.innerHTML = '';
+
+  topic.q.forEach((qtext,i)=>{
+    const rec = state.recordings[i];
+    const auto = rec ? computeAutoScores(rec, qtext) : null;
+    if(!manualScores[i]) manualScores[i] = auto ? {...auto} : {f:0,v:0,g:0,p:0};
+
+    const item = document.createElement('div');
+    item.className = 'score-item';
+
+    let html = `<div class="score-q">${i+1}. ${qtext}</div>`;
+    if(rec && rec.transcript){
+      html += `<div class="auto-tag">Gợi ý tự động</div><div class="score-transcript">"${rec.transcript}"</div>`;
+    } else if(!rec){
+      html += `<div class="score-empty">Chưa ghi âm câu này — hãy quay lại luyện tập.</div>`;
+    } else {
+      html += `<div class="score-transcript">Không nhận được văn bản giọng nói — hãy chấm bằng tay.</div>`;
+    }
+
+    ['f','v','g','p'].forEach(crit=>{
+      const labels = {f:'Trôi chảy',v:'Từ vựng',g:'Ngữ pháp',p:'Phát âm'};
+      html += `<div class="crit-row"><div class="crit-label">${labels[crit]}</div><div class="crit-scale" data-crit="${crit}" data-q="${i}">`;
+      for(let n=1;n<=5;n++){
+        const isPicked = manualScores[i][crit]===n;
+        const isSuggested = auto && auto[crit]===n;
+        html += `<button type="button" class="${isPicked?'picked':''} ${isSuggested?'suggested':''}" data-val="${n}">${n}</button>`;
+      }
+      html += `</div></div>`;
+    });
+    html += `<div class="q-subtotal" id="subtotal-${i}"></div>`;
+
+    item.innerHTML = html;
+    list.appendChild(item);
+  });
+
+  list.querySelectorAll('.crit-scale button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const scale = btn.parentElement;
+      const q = +scale.getAttribute('data-q');
+      const crit = scale.getAttribute('data-crit');
+      manualScores[q][crit] = +btn.getAttribute('data-val');
+      scale.querySelectorAll('button').forEach(b=>b.classList.remove('picked'));
+      btn.classList.add('picked');
+      updateTotals();
+    });
+  });
+
+  updateTotals();
+}
+
+function updateTotals(){
+  const topic = currentTopic();
+  let grand = 0;
+  const maxPerQ = 20;
+  topic.q.forEach((_,i)=>{
+    const s = manualScores[i] || {f:0,v:0,g:0,p:0};
+    const sub = s.f+s.v+s.g+s.p;
+    grand += sub;
+    const el = document.getElementById('subtotal-'+i);
+    if(el) el.textContent = `Tổng câu: ${sub} / ${maxPerQ}`;
+  });
+  const max = maxPerQ*topic.q.length;
+  document.getElementById('totalScore').textContent = `${grand} / ${max}`;
+  const pct = max ? grand/max : 0;
+  const bandEl = document.getElementById('totalBand');
+  if(pct>=0.9) bandEl.textContent = 'Xuất sắc! Bạn nói rất tự tin và rõ ràng.';
+  else if(pct>=0.75) bandEl.textContent = 'Rất tốt — tiếp tục phát huy nhé.';
+  else if(pct>=0.6) bandEl.textContent = 'Khá ổn, luyện thêm để trôi chảy hơn.';
+  else if(pct>0) bandEl.textContent = 'Hãy luyện tập thêm — bạn sẽ tiến bộ nhanh thôi.';
+  else bandEl.textContent = 'Hoàn thành chấm điểm ở trên để xem kết quả.';
+}
+</script>
+</body>
+</html>
